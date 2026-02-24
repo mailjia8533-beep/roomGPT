@@ -1,93 +1,41 @@
-import { Ratelimit } from "@upstash/ratelimit";
-import redis from "../../utils/redis";
-import { NextResponse } from "next/server";
-import { headers } from "next/headers";
+// pages/api/generate.ts
+import { NextApiRequest, NextApiResponse } from 'next';
 
-// Create a new ratelimiter, that allows 5 requests per 24 hours
-const ratelimit = redis
-  ? new Ratelimit({
-      redis: redis,
-      limiter: Ratelimit.fixedWindow(5, "1440 m"),
-      analytics: true,
-    })
-  : undefined;
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const { prompt, imageUrl } = req.body;
 
-export async function POST(request: Request) {
-  // Rate Limiter Code
-  if (ratelimit) {
-    const headersList = headers();
-    const ipIdentifier = headersList.get("x-real-ip");
+  // 从 Zeabur 的环境变量中读取配置
+  const API_KEY = process.env.RUNNINGHUB_API_KEY;
+  const WORKFLOW_ID = process.env.WORKFLOW_ID;
+  const PROMPT_NODE_ID = process.env.PROMPT_NODE_ID || "6"; // 默认填你的提示词节点ID
+  const IMAGE_NODE_ID = process.env.IMAGE_NODE_ID || "9";   // 默认填你的图片节点ID
 
-    const result = await ratelimit.limit(ipIdentifier ?? "");
-
-    if (!result.success) {
-      return new Response(
-        "Too many uploads in 1 day. Please try again in a 24 hours.",
-        {
-          status: 429,
-          headers: {
-            "X-RateLimit-Limit": result.limit,
-            "X-RateLimit-Remaining": result.remaining,
-          } as any,
-        }
-      );
-    }
-  }
-
-  const { imageUrl, theme, room } = await request.json();
-
-  // POST request to Replicate to start the image restoration generation process
-  let startResponse = await fetch("https://api.replicate.com/v1/predictions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Token " + process.env.REPLICATE_API_KEY,
-    },
-    body: JSON.stringify({
-      version:
-        "854e8727697a057c525cdb45ab037f64ecca770a1769cc52287c2e56472a247b",
-      input: {
-        image: imageUrl,
-        prompt:
-          room === "Gaming Room"
-            ? "a room for gaming with gaming computers, gaming consoles, and gaming chairs"
-            : `a ${theme.toLowerCase()} ${room.toLowerCase()}`,
-        a_prompt:
-          "best quality, extremely detailed, photo from Pinterest, interior, cinematic photo, ultra-detailed, ultra-realistic, award-winning",
-        n_prompt:
-          "longbody, lowres, bad anatomy, bad hands, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality",
-      },
-    }),
-  });
-
-  let jsonStartResponse = await startResponse.json();
-
-  let endpointUrl = jsonStartResponse.urls.get;
-
-  // GET request to get the status of the image restoration process & return the result when it's ready
-  let restoredImage: string | null = null;
-  while (!restoredImage) {
-    // Loop in 1s intervals until the alt text is ready
-    console.log("polling for result...");
-    let finalResponse = await fetch(endpointUrl, {
-      method: "GET",
+  try {
+    const response = await fetch("https://www.runninghub.ai/api/v1/task/openapi/v2/execute", {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Token " + process.env.REPLICATE_API_KEY,
+        "Authorization": `Bearer ${API_KEY}`,
       },
+      body: JSON.stringify({
+        workflow_id: WORKFLOW_ID,
+        input_nodes: {
+          [PROMPT_NODE_ID]: { "text": prompt },
+          // 如果你的工作流需要输入图片（试穿功能），取消下面这行的注释
+          // [IMAGE_NODE_ID]: { "image_url": imageUrl } 
+        }
+      }),
     });
-    let jsonFinalResponse = await finalResponse.json();
 
-    if (jsonFinalResponse.status === "succeeded") {
-      restoredImage = jsonFinalResponse.output;
-    } else if (jsonFinalResponse.status === "failed") {
-      break;
+    const data = await response.json();
+    
+    if (data.code === 0) {
+      // 成功获取 RunningHub 任务 ID
+      res.status(200).json({ taskId: data.data.task_id });
     } else {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      res.status(500).json({ error: data.msg });
     }
+  } catch (error) {
+    res.status(500).json({ error: "连接 RunningHub 失败" });
   }
-
-  return NextResponse.json(
-    restoredImage ? restoredImage : "Failed to restore image"
-  );
 }
