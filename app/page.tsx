@@ -9,7 +9,7 @@ export default function HomePage() {
     <div className="flex max-w-6xl mx-auto flex-col items-center justify-center py-2 min-h-screen bg-[#0a0a0a] text-white">
       <Header />
       <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 sm:mt-20 mt-20">
-        {/* 顶部小标签：改为你的品牌口号 */}
+        {/* 顶部小标签 */}
         <div className="border border-gray-800 rounded-full py-1 px-4 text-gray-500 text-sm mb-5">
           由 <span className="text-blue-600">RunningHub</span> 提供算力支持
         </div>
@@ -35,28 +35,35 @@ export default function HomePage() {
           立即开始生成
         </Link>
 
-        {/* 案例展示区 */}
+        {/* 案例展示区 - 修复后的完整结构 */}
         <div className="flex justify-between items-center w-full flex-col sm:mt-20 mt-10">
           <div className="flex flex-col space-y-10 mt-4 mb-16">
             <div className="flex sm:space-x-12 sm:flex-row flex-col">
+              {/* 原始图卡片 */}
               <div>
-                <h3 className="mb-3 font-medium text-gray-500 uppercase tracking-widest text-sm">Original Style / 原始图</h3>
+                <h3 className="mb-3 font-medium text-gray-500 uppercase tracking-widest text-sm">
+                  Original Style / 原始图
+                </h3>
                 <Image
                   alt="Original fashion photo"
-                  src="/original-pic.jpg" 
+                  src="/original-pic.jpg"
                   className="w-full object-cover h-[450px] rounded-2xl border border-gray-800"
                   width={400}
                   height={400}
                 />
               </div>
+
+              {/* 生成图卡片 */}
               <div className="sm:mt-0 mt-8">
-                <h3 className="mb-3 font-medium text-blue-500 uppercase tracking-widest text-sm">AI K-Fashion / 生成图</h3>
+                <h3 className="mb-3 font-medium text-blue-500 uppercase tracking-widest text-sm">
+                  AI K-Fashion / 生成图
+                </h3>
                 <Image
                   alt="Generated fashion photo"
-                  width={400}
-                  height={400}
                   src="/generated-pic-2.jpg"
                   className="w-full object-cover h-[450px] rounded-2xl border border-blue-900/30 sm:mt-0 mt-2"
+                  width={400}
+                  height={400}
                 />
               </div>
             </div>
