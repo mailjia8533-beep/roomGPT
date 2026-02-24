@@ -1,150 +1,37 @@
-"use client";  
-import { AnimatePresence, motion } from "framer-motion";  
-import Image from "next/image";  
-import { useState } from "react";  
-import { UrlBuilder } from "@bytescale/sdk";  
-import { UploadWidgetConfig } from "@bytescale/upload-widget";  
-import { UploadDropzone } from "@bytescale/upload-widget-react";  
-import { CompareSlider } from "../components/CompareSlider";  
-import Footer from "../components/Footer";  
-import Header from "../components/Header";  
-import LoadingDots from "../components/LoadingDots";  
-import ResizablePanel from "../components/ResizablePanel";  
-import Toggle from "../components/Toggle";  
-import appendNewToName from "../utils/appendNewToName";  
-import downloadPhoto from "../utils/downloadPhoto";  
-import DropDown from "../components/DropDown";  
-const themes = ["K-Pop Style", "Clean Fit", "Vintage High-End", "Minimalist"];  
-const rooms = ["Street Shot", "Studio", "Magazine Cover", "Daily Look"];  
-const options: UploadWidgetConfig = {  
-  apiKey: !!process.env.NEXT_PUBLIC_UPLOAD_API_KEY  
-    ? process.env.NEXT_PUBLIC_UPLOAD_API_KEY  
-    : "free",  
-  maxFileCount: 1,  
-  mimeTypes: ["image/jpeg", "image/png", "image/jpg"],  
-  editor: { images: { crop: false } },  
-  styles: {  
-    colors: {  
-      primary: "#000000",  
-      error: "#d23f4d",  
-      shade100: "#fff",  
-      shade200: "#fffe",  
-      shade300: "#fffd",  
-      shade400: "#fffc",  
-      shade500: "#fff9",  
-      shade600: "#fff7",  
-      shade700: "#fff2",  
-      shade800: "#fff1",  
-      shade900: "#ffff",  
-    },  
-  },  
-};  
-export default function DreamPage() {  
-  const [originalPhoto, setOriginalPhoto] = useState<string | null>(null);  
-  const [restoredImage, setRestoredImage] = useState<string | null>(null);  
-  const [loading, setLoading] = useState<boolean>(false);  
-  const [restoredLoaded, setRestoredLoaded] = useState<boolean>(false);  
-  const [sideBySide, setSideBySide] = useState<boolean>(false);  
-  const [error, setError] = useState<string | null>(null);  
-  const [photoName, setPhotoName] = useState<string | null>(null);  
-  const [theme, setTheme] = useState(themes[0]);  
-  const [room, setRoom] = useState(rooms[0]);  
-  const UploadDropZone = () => (  
-    <UploadDropzone  
-      options={options}  
-      onUpdate={({ uploadedFiles }) => {  
-        if (uploadedFiles.length !== 0) {  
-          const image = uploadedFiles[0];  
-          const imageName = image.originalFile.originalFileName;  
-          const imageUrl = UrlBuilder.url({  
-            accountId: image.accountId,  
-            filePath: image.filePath,  
-            options: {  
-              transformation: "preset",  
-              transformationPreset: "thumbnail",  
-            },  
-          });  
-          setPhotoName(imageName);  
-          setOriginalPhoto(imageUrl);  
-          generatePhoto(imageUrl);  
-        }  
-      }}  
-      width="100%"  
-      height="250px"  
-    />  
-  );  
-  async function generatePhoto(fileUrl: string) {  
-    await new Promise((resolve) => setTimeout(resolve, 200));  
-    setLoading(true);  
-    setError(null);  
-    try {  
-      const res = await fetch("/api/generate", {  
-        method: "POST",  
-        headers: {  
-          "Content-Type": "application/json",  
-        },  
-        body: JSON.stringify({  
-          imageUrl: fileUrl,  
-          prompt: `A high-end Korean fashion shot, ${theme} style, ${room} setting, 8k resolution`,  
-        }),  
-      });  
-      const data = await res.json();  
-      if (res.status !== 200) {  
-        setError(data.error || "生成失败，请检查 RunningHub 配置");  
-      } else {  
-        setRestoredImage(data.output_url || data[1]);  
-      }  
-    } catch (err) {  
-      setError("生成过程中出错，请重试");  
-    } finally {  
-      setLoading(false);  
-    }  
-  }  
-  return (  
-    <div className="flex max-w-6xl mx-auto flex-col items-center justify-center py-2 min-h-screen bg-black text-white">  
-      <Header />  
-      <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-4 sm:mb-0 mb-8">  
-        <h1 className="mx-auto max-w-4xl font-display text-4xl font-bold tracking-tighter text-slate-100 sm:text-6xl mb-5 uppercase">  
-          AI 韩系穿搭 <span className="text-blue-600">视觉</span> 实验室  
-        </h1>  
-        <p className="text-gray-400 mb-10">基于 ComfyUI 算力 · 一键生成高级街拍感</p>  
-        <ResizablePanel>  
-          <AnimatePresence mode="wait">  
-            <motion.div className="flex justify-between items-center w-full flex-col mt-4">  
-              {!restoredImage && (  
-                <div className="flex flex-col md:flex-row gap-8 w-full justify-center items-start mb-10">  
-                  <div className="space-y-4 w-full max-w-sm text-left">  
-                    <p className="font-medium text-blue-500">01. 选择穿搭风格</p>  
-                    <DropDown  
-                      theme={theme}  
-                      setTheme={(newTheme) => setTheme(newTheme)}  
-                      themes={themes}  
-                    />  
-                  </div>  
-                  <div className="space-y-4 w-full max-w-sm text-left">  
-                    <p className="font-medium text-blue-500">02. 选择拍摄场景</p>  
-                    <DropDown  
-                      theme={room}  
-                      setTheme={(newRoom) => setRoom(newRoom)}  
-                      themes={rooms}  
-                    />  
-                  </div>  
-                </div>  
-              )}  
-              {restoredImage && (  
-                <div className="mb-6 text-lg">  
-                  ✨ 已为您生成全新的 <b>{theme}</b> 风格大片！  
-                </div>  
-              )}  
-              <div className={restoredLoaded ? "visible mt-6" : "invisible"}>  
-                <Toggle  
-                  sideBySide={sideBySide}  
-                  setSideBySide={(newVal) => setSideBySide(newVal)}  
-                />  
-              </div>  
-              {restoredLoaded && sideBySide && (  
-                <CompareSlider  
-                  original={originalPhoto!}  
-                  restored={restoredImage!}  
-                />  
-              )}  
+import React, { useState } from "react";
+
+// 定义一个最简单的 Header，防止因为外部组件找不到而报错
+const SimpleHeader = () => (
+  <header className="py-8 text-2xl font-bold text-blue-600 uppercase tracking-widest">
+    K-Fashion AI Lab
+  </header>
+);
+
+export default function HomePage() {
+  return (
+    <div className="flex max-w-6xl mx-auto flex-col items-center justify-center py-2 min-h-screen bg-black text-white font-sans">
+      <SimpleHeader />
+      
+      <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4">
+        <h1 className="mx-auto max-w-4xl text-5xl font-bold tracking-tight sm:text-7xl mb-8">
+          打造你的 <span className="text-blue-600">韩系穿搭</span> 视觉大片
+        </h1>
+
+        <div className="mt-10 p-12 border-2 border-dashed border-gray-800 rounded-3xl w-full max-w-2xl bg-[#0a0a0a]">
+          <p className="text-gray-500 mb-6">系统初始化成功！</p>
+          <button className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-full font-bold transition">
+            准备接入上传组件
+          </button>
+        </div>
+
+        <p className="mt-12 text-gray-500 text-sm italic">
+          由 RunningHub 算力驱动 · 专属时尚博主工具
+        </p>
+      </main>
+
+      <footer className="py-8 text-gray-700 text-xs">
+        © 2026 K-Fashion AI Laboratory
+      </footer>
+    </div>
+  );
+}
