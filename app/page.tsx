@@ -8,12 +8,12 @@ import { UploadDropzone } from "@bytescale/upload-widget-react";
 import { CompareSlider } from "../components/CompareSlider";  
 import Footer from "../components/Footer";  
 import Header from "../components/Header";  
-import LoadingDots from "../../components/LoadingDots";  
-import ResizablePanel from "../../components/ResizablePanel";  
-import Toggle from "../../components/Toggle";  
+import LoadingDots from "../components/LoadingDots";  
+import ResizablePanel from "../components/ResizablePanel";  
+import Toggle from "../components/Toggle";  
 import appendNewToName from "../../utils/appendNewToName";  
 import downloadPhoto from "../../utils/downloadPhoto";  
-import DropDown from "../../components/DropDown";  
+import DropDown from "../components/DropDown";  
 const themes = ["K-Pop Style", "Clean Fit", "Vintage High-End", "Minimalist"];  
 const rooms = ["Street Shot", "Studio", "Magazine Cover", "Daily Look"];  
 const options: UploadWidgetConfig = {  
