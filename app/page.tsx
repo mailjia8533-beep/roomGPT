@@ -6,57 +6,57 @@ import SquigglyLines from "../components/SquigglyLines";
 
 export default function HomePage() {
   return (
-    <div className="flex max-w-6xl mx-auto flex-col items-center justify-center py-2 min-h-screen">
+    <div className="flex max-w-6xl mx-auto flex-col items-center justify-center py-2 min-h-screen bg-[#0a0a0a] text-white">
       <Header />
-      <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 sm:mt-20 mt-20 background-gradient">
-        <a
-          href="https://vercel.fyi/roomGPT"
-          target="_blank"
-          rel="noreferrer"
-          className="border border-gray-700 rounded-lg py-2 px-4 text-gray-400 text-sm mb-5 transition duration-300 ease-in-out"
-        >
-          Clone and deploy your own with{" "}
-          <span className="text-blue-600">Vercel</span>
-        </a>
-        <h1 className="mx-auto max-w-4xl font-display text-5xl font-bold tracking-normal text-gray-300 sm:text-7xl">
-          Generating dream rooms{" "}
+      <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 sm:mt-20 mt-20">
+        {/* 顶部小标签：改为你的品牌口号 */}
+        <div className="border border-gray-800 rounded-full py-1 px-4 text-gray-500 text-sm mb-5">
+          由 <span className="text-blue-600">RunningHub</span> 提供算力支持
+        </div>
+
+        <h1 className="mx-auto max-w-4xl font-display text-5xl font-bold tracking-tight text-gray-100 sm:text-7xl">
+          打造你的{" "}
           <span className="relative whitespace-nowrap text-blue-600">
             <SquigglyLines />
-            <span className="relative">using AI</span>
+            <span className="relative">韩系穿搭</span>
           </span>{" "}
-          for everyone.
+          AI 视觉大片
         </h1>
-        <h2 className="mx-auto mt-12 max-w-xl text-lg sm:text-gray-400  text-gray-500 leading-7">
-          Take a picture of your room and see how your room looks in different
-          themes. 100% free – remodel your room today.
+
+        <h2 className="mx-auto mt-12 max-w-xl text-lg text-gray-400 leading-7">
+          上传穿搭照片，通过 AI 技术一键切换多种韩系流行风格。
+          100% 自动化生成 —— 开启你的私人 AI 时尚模特之旅。
         </h2>
+
         <Link
-          className="bg-blue-600 rounded-xl text-white font-medium px-4 py-3 sm:mt-10 mt-8 hover:bg-blue-500 transition"
+          className="bg-blue-600 rounded-full text-white font-bold px-8 py-4 sm:mt-10 mt-8 hover:bg-blue-500 transition shadow-lg shadow-blue-600/20"
           href="/dream"
         >
-          Generate your dream room
+          立即开始生成
         </Link>
-        <div className="flex justify-between items-center w-full flex-col sm:mt-10 mt-6">
+
+        {/* 案例展示区 */}
+        <div className="flex justify-between items-center w-full flex-col sm:mt-20 mt-10">
           <div className="flex flex-col space-y-10 mt-4 mb-16">
-            <div className="flex sm:space-x-8 sm:flex-row flex-col">
+            <div className="flex sm:space-x-12 sm:flex-row flex-col">
               <div>
-                <h3 className="mb-1 font-medium text-lg">Original Room</h3>
+                <h3 className="mb-3 font-medium text-gray-500 uppercase tracking-widest text-sm">Original Style / 原始图</h3>
                 <Image
-                  alt="Original photo of a room with roomGPT.io"
-                  src="/original-pic.jpg"
-                  className="w-full object-cover h-96 rounded-2xl"
+                  alt="Original fashion photo"
+                  src="/original-pic.jpg" 
+                  className="w-full object-cover h-[450px] rounded-2xl border border-gray-800"
                   width={400}
                   height={400}
                 />
               </div>
               <div className="sm:mt-0 mt-8">
-                <h3 className="mb-1 font-medium text-lg">Generated Room</h3>
+                <h3 className="mb-3 font-medium text-blue-500 uppercase tracking-widest text-sm">AI K-Fashion / 生成图</h3>
                 <Image
-                  alt="Generated photo of a room with roomGPT.io"
+                  alt="Generated fashion photo"
                   width={400}
                   height={400}
                   src="/generated-pic-2.jpg"
-                  className="w-full object-cover h-96 rounded-2xl sm:mt-0 mt-2"
+                  className="w-full object-cover h-[450px] rounded-2xl border border-blue-900/30 sm:mt-0 mt-2"
                 />
               </div>
             </div>
