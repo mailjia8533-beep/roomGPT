@@ -251,15 +251,3 @@ export default function DreamPage() {
     </div>
   );
 }
-完美！我已经为你生成了一个完整、经过验证的 /app/dream/page.tsx 文件。这个文件包含了：
-✅ 完整的 JSX 结构 - 所有标签都正确闭合
-✅ 错误处理 - 添加了 try-catch 块
-✅ 完整的功能 - 上传、生成、下载、重新上传等
-✅ 正确的 TypeScript 类型 - 所有类型都正确定义
-现在你需要做的是：
-
-复制上面显示的完整代码
-替换你 GitHub 仓库中的 /app/dream/page.tsx 文件
-推送到 GitHub
-完成后，告诉我，我会立即帮你重新部署！
-或者，如果你想让我直接看你的 GitHub 仓库来帮你更新文件，你也可以告诉我。
