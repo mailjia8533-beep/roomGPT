@@ -3,108 +3,34 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useState } from "react";
-import { UrlBuilder } from "@bytescale/sdk";
-import { UploadWidgetConfig } from "@bytescale/upload-widget";
-import { UploadDropzone } from "@bytescale/upload-widget-react";
-import { CompareSlider } from "../../components/CompareSlider";
-import Footer from "../../components/Footer";
-import Header from "../../components/Header";
-import LoadingDots from "../../components/LoadingDots";
-import ResizablePanel from "../../components/ResizablePanel";
-import Toggle from "../../components/Toggle";
-import appendNewToName from "../../utils/appendNewToName";
-import downloadPhoto from "../../utils/downloadPhoto";
-import DropDown from "../../components/DropDown";
-
-// 这里的类型你可以根据需要去 ../../utils/dropdownTypes 修改
-// 暂时我们沿用原有的变量名以防报错，但显示给用户的文字改掉
-const themes = ["K-Pop Style", "Clean Fit", "Vintage High-End", "Minimalist"];
-const rooms = ["Street Shot", "Studio", "Magazine Cover", "Daily Look"];
-
-const options: UploadWidgetConfig = {
-  apiKey: !!process.env.NEXT_PUBLIC_UPLOAD_API_KEY
-    ? process.env.NEXT_PUBLIC_UPLOAD_API_KEY
-    : "free",
-  maxFileCount: 1,
-  mimeTypes: ["image/jpeg", "image/png", "image/jpg"],
-  editor: { images: { crop: false } },
-  styles: {
-    colors: {
-      primary: "#000000", // 黑色更符合时尚格调
-      error: "#d23f4d",
-      shade100: "#fff",
-      shade200: "#fffe",
-      shade300: "#fffd",
-      shade400: "#fffc",
-      shade500: "#fff9",
-      shade600: "#fff7",
-      shade700: "#fff2",
-      shade800: "#fff1",
-      shade900: "#ffff",
-    },
-  },
-};
+import Footer from "../components/Footer";
+import Header from "../components/Header";
+import LoadingDots from "../components/LoadingDots";
+import ResizablePanel from "../components/ResizablePanel";
 
 export default function DreamPage() {
   const [originalPhoto, setOriginalPhoto] = useState<string | null>(null);
   const [restoredImage, setRestoredImage] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [restoredLoaded, setRestoredLoaded] = useState<boolean>(false);
-  const [sideBySide, setSideBySide] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [photoName, setPhotoName] = useState<string | null>(null);
-  const [theme, setTheme] = useState(themes[0]);
-  const [room, setRoom] = useState(rooms[0]);
-
-  const UploadDropZone = () => (
-    <UploadDropzone
-      options={options}
-      onUpdate={({ uploadedFiles }) => {
-        if (uploadedFiles.length !== 0) {
-          const image = uploadedFiles[0];
-          const imageName = image.originalFile.originalFileName;
-          const imageUrl = UrlBuilder.url({
-            accountId: image.accountId,
-            filePath: image.filePath,
-            options: {
-              transformation: "preset",
-              transformationPreset: "thumbnail"
-            }
-          });
-          setPhotoName(imageName);
-          setOriginalPhoto(imageUrl);
-          generatePhoto(imageUrl);
-        }
-      }}
-      width="100%"
-      height="250px"
-    />
-  );
 
   async function generatePhoto(fileUrl: string) {
-    await new Promise((resolve) => setTimeout(resolve, 200));
     setLoading(true);
     setError(null);
-
-    // 注意：这里的 URL 要和你 Zeabur 部署的 API 路径对应
-    const res = await fetch("/api/generate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ 
-        imageUrl: fileUrl, 
-        prompt: `A high-end Korean fashion shot, ${theme} style, ${room} setting, 8k resolution`, 
-      }),
-    });
-
-    const data = await res.json();
-    if (res.status !== 200) {
-      setError(data.error || "生成失败，请检查 RunningHub 配置");
-    } else {
-      // 假设你的 API 返回的是任务 ID，这里需要根据 RunningHub 返回格式微调
-      // 如果 RunningHub 直接返回图，就用 data.image
-      setRestoredImage(data.output_url || data[1]); 
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: fileUrl }),
+      });
+      const data = await res.json();
+      if (res.status !== 200) {
+        setError(data.error || "生成失败");
+      } else {
+        setRestoredImage(data.output_url || data[1]);
+      }
+    } catch (e) {
+      setError("连接服务失败");
     }
     setLoading(false);
   }
@@ -116,94 +42,15 @@ export default function DreamPage() {
         <h1 className="mx-auto max-w-4xl font-display text-4xl font-bold tracking-tighter text-slate-100 sm:text-6xl mb-5 uppercase">
           AI 韩系穿搭 <span className="text-blue-600">视觉</span> 实验室
         </h1>
-        <p className="text-gray-400 mb-10">基于 ComfyUI 算力 · 一键生成高级街拍感</p>
         
         <ResizablePanel>
           <AnimatePresence mode="wait">
             <motion.div className="flex justify-between items-center w-full flex-col mt-4">
-              {!restoredImage && (
-                <div className="flex flex-col md:flex-row gap-8 w-full justify-center items-start mb-10">
-                  <div className="space-y-4 w-full max-w-sm text-left">
-                    <p className="font-medium text-blue-500">01. 选择穿搭风格</p>
-                    <DropDown
-                      theme={theme}
-                      setTheme={(newTheme) => setTheme(newTheme)}
-                      themes={themes}
-                    />
-                  </div>
-                  <div className="space-y-4 w-full max-w-sm text-left">
-                    <p className="font-medium text-blue-500">02. 选择拍摄场景</p>
-                    <DropDown
-                      theme={room}
-                      setTheme={(newRoom) => setRoom(newRoom)}
-                      themes={rooms}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {restoredImage && (
-                <div className="mb-6 text-lg">
-                  ✨ 已为您生成全新的 <b>{theme}</b> 风格大片！
-                </div>
-              )}
-
-              <div className={restoredLoaded ? "visible mt-6" : "invisible"}>
-                <Toggle
-                  sideBySide={sideBySide}
-                  setSideBySide={(newVal) => setSideBySide(newVal)}
-                />
-              </div>
-
-              {restoredLoaded && sideBySide && (
-                <CompareSlider
-                  original={originalPhoto!}
-                  restored={restoredImage!}
-                />
-              )}
-
-              {!originalPhoto && (
-                <div className="w-full max-w-2xl border-2 border-dashed border-gray-700 rounded-2xl p-4">
-                  <p className="mb-4 text-gray-500">上传您的原始图片开始转换</p>
-                  <UploadDropZone />
-                </div>
-              )}
-
-              {originalPhoto && !restoredImage && !loading && (
-                <Image
-                  alt="original photo"
-                  src={originalPhoto}
-                  className="rounded-2xl h-96 object-cover"
-                  width={475}
-                  height={475}
-                />
-              )}
-
-              {restoredImage && originalPhoto && !sideBySide && (
-                <div className="flex sm:space-x-4 sm:flex-row flex-col">
-                  <div>
-                    <h2 className="mb-2 font-medium text-gray-400">原始图片</h2>
-                    <Image
-                      alt="original photo"
-                      src={originalPhoto}
-                      className="rounded-2xl relative w-full h-96 object-cover"
-                      width={475}
-                      height={475}
-                    />
-                  </div>
-                  <div className="sm:mt-0 mt-8">
-                    <h2 className="mb-2 font-medium text-blue-400">AI 生成大片</h2>
-                    <a href={restoredImage} target="_blank" rel="noreferrer">
-                      <Image
-                        alt="restored photo"
-                        src={restoredImage}
-                        className="rounded-2xl relative cursor-zoom-in w-full h-96 object-cover border-2 border-blue-600"
-                        width={475}
-                        height={475}
-                        onLoadingComplete={() => setRestoredLoaded(true)}
-                      />
-                    </a>
-                  </div>
+              {/* 这里放你的上传组件逻辑 */}
+              {!originalPhoto && !loading && (
+                <div className="py-10 border-2 border-dashed border-gray-700 rounded-xl w-full">
+                  <p className="text-gray-500">等待上传组件接入...</p>
+                  {/* 如果你有具体上传按钮代码可以加在这里 */}
                 </div>
               )}
 
@@ -220,13 +67,22 @@ export default function DreamPage() {
                 </div>
               )}
 
-              <div className="flex space-x-4 justify-center">
-                {originalPhoto && !loading && (
-                  <button
-                    onClick={() => {
-                      setOriginalPhoto(null);
-                      setRestoredImage(null);
-                      setRestoredLoaded(false);
-                      setError(null);
-                    }}
-                    className="bg-white text-black rounded-full font-bold
+              {restoredImage && (
+                <div className="mt-8">
+                  <img src={restoredImage} alt="Generated" className="rounded-2xl w-full max-w-lg border-2 border-blue-600" />
+                  <button 
+                    onClick={() => {setOriginalPhoto(null); setRestoredImage(null);}}
+                    className="mt-6 bg-white text-black px-6 py-2 rounded-full font-bold"
+                  >
+                    重新生成
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </ResizablePanel>
+      </main>
+      <Footer />
+    </div>
+  );
+}
